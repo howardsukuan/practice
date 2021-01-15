@@ -35,7 +35,7 @@ def GetCurrency(inputSTR):
 # 將符合句型的參數列表印出。這是 debug 或是開發用的。
 def debugInfo(inputSTR, utterance):
     if DEBUG_Exchange:
-            print("[Exchange] {} ===> {}".format(inputSTR, utterance))
+        print("[Exchange] {} ===> {}".format(inputSTR, utterance))
 
 def getResult(inputSTR, utterance, args, resultDICT):
     debugInfo(inputSTR, utterance)

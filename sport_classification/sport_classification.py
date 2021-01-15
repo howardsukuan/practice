@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+
 """
     Loki 2.0 Template For Python3
 
@@ -42,17 +43,20 @@
 """
 
 import requests
+import math
 try:
-    from intent import Loki_Exchange
+    from intent import Loki_badminton
+    from intent import Loki_baseball
 except:
-    from .intent import Loki_Exchange
+    from .intent import Loki_badminton
+    from .intent import Loki_baseball
 
-from ArticutAPI import ArticutAPI
-articut = ArticutAPI.Articut()
 
 LOKI_URL = "https://api.droidtown.co/Loki/BulkAPI/"
 USERNAME = ""
 LOKI_KEY = ""
+from ArticutAPI import ArticutAPI
+import re
 # 意圖過濾器說明
 # INTENT_FILTER = []        => 比對全部的意圖 (預設)
 # INTENT_FILTER = [intentN] => 僅比對 INTENT_FILTER 內的意圖
@@ -160,72 +164,51 @@ class LokiResult():
 
 def runLoki(inputLIST):
     resultDICT = {}
+    resultDICT["badminton"] =0
+    resultDICT["baseball"] =0
     lokiRst = LokiResult(inputLIST)
     if lokiRst.getStatus():
         for index, key in enumerate(inputLIST):
             for resultIndex in range(0, lokiRst.getLokiLen(index)):
-                # Exchange
-                if lokiRst.getIntent(index, resultIndex) == "Exchange":
-                    resultDICT = Loki_Exchange.getResult(key, lokiRst.getUtterance(index, resultIndex), lokiRst.getArgs(index, resultIndex), resultDICT)
+                # badminton
+                if lokiRst.getIntent(index, resultIndex) == "badminton":
+                    resultDICT = Loki_badminton.getResult(key, lokiRst.getUtterance(index, resultIndex), lokiRst.getArgs(index, resultIndex), resultDICT)
+                    resultDICT["badminton"] +=resultDICT["badminton"] 
+
+                # baseball
+                if lokiRst.getIntent(index, resultIndex) == "baseball":
+                    resultDICT = Loki_baseball.getResult(key, lokiRst.getUtterance(index, resultIndex), lokiRst.getArgs(index, resultIndex), resultDICT)
+                    resultDICT["baseball"]  += resultDICT["baseball"] 
 
     else:
         resultDICT = {"msg": lokiRst.getMessage()}
     return resultDICT
 
-moneyDICT = {'台幣': 'TWD','新台幣':'TWD','美元':'USD','鎂':'USD', '美金': 'USD', '歐元': 'EUR', '日圓': 'JPY', '英鎊': 'GBP', '瑞士法郎': 'CHF', '加幣': 'CAD', '澳幣': 'AUD', '巴西黑奧': 'BRL', '人民幣': 'CNY', '捷克克朗': 'CZK', '丹麥克羅納': 'DKK', '港幣': 'HKD', '匈牙利': 'HUF', '印尼盧比': 'IDR', '印度盧比': 'INR', '韓圜': 'KRW', '墨西哥披索': 'MXN', '挪威克?': 'NOK', '紐幣': 'NZD', '菲律賓披索': 'PHP', '波蘭茲羅提': 'PLN', '俄國盧布': 'RUB', '瑞典克郎': 'SEK', '新加坡幣': 'SGD', '泰銖': 'THB', '土耳其里拉': 'TRL', '南非幣': 'ZAR', '馬來西亞': 'MYR', '斯洛伐克克朗': 'SKK', '沙烏地阿拉伯利雅': 'SAR', '哥倫比亞披索': 'COP', '辛巴威': 'ZWD', '摩洛哥迪拉姆': 'MAD', '埃及鎊': 'EGP', '以色列謝克': 'ILS', '智利披索': 'CLP', '阿根廷披索': 'ARS', '玻利維亞幣': 'BOB', '厄爪多爾蘇克雷': 'ECS', '巴拿馬巴布亞': 'PAB', '委內瑞拉銀幣': 'VEB', '巴基斯坦盧比': 'PKR', '斯里蘭卡盧比': 'LKR', '哥斯大黎加': 'CRC', '新土耳其里拉': 'TRY', '肯亞先令': 'KES', '模里西斯盧比': 'MUR', '越南幣': 'VND', '冰島幣': 'ISK', '阿拉伯聯合大公國迪拉姆': 'AED', '秘魯索爾': 'PEN', '黃金': 'XAU', '境外人民幣': 'CNH', '科威特幣': 'KWD', '澳門幣': 'MOP'}
-def moneyName(inputSTR):
-    return moneyDICT[inputSTR]
-
-    
-#dict from
-#import csv
-#curDICT={}
-#with open('currency_CE.csv', 'r') as file:
-#    reader = csv.reader(file)
-#    for row in reader:
-#         curDICT[row[1]]=row[0]
-
-
-def amountSTRConvert(inputSTR):
-    resultDICT = articut.parse(inputSTR, level="lv3") 
-    return resultDICT["number"]
-
-def ListToString(MyInput):
-    if isinstance(MyInput,str):
-        return(MyInput)  
-    else:
-        return(MyInput[0])
-    
-    
 if __name__ == "__main__":
-    inputLIST = ["一百歐元可以換多少台幣?"]
-    resultDICT = runLoki(inputLIST)
-    #try "今天美金換台幣是多少" "我想要100鎂" "一百美元" "一百元美元"
-    
-     
-    #converting
-    source_1 = ListToString(resultDICT["src"])
-    target_1 = ListToString(resultDICT["tgt"])
-    amount_1 = ListToString(resultDICT["amt"])
-    #dealing with 一百美元
-    
-    
-    #get today's rate
-    response = requests.get("https://tw.rter.info/capi.php")
-    rateDICT = response.json()
+    articut = ArticutAPI.Articut(level="lv2")
+    pat = "</?[a-zA-Z]+?_?[a-zA-Z]+?>"
+    inputSTR = """「大鬍子」JamesHarden離隊宣言惹怒不少火箭隊友，在他確定轉戰籃網後，火箭今(15)日以109:105擊敗馬刺，前一哥撒手走人後馬上終止2連敗，火箭主帥StephenSilas表示此役勝利對重建相當重要。休賽季就高喊「賣我」的Harden在前天再度敗給湖人的賽後記者會直接表達對球隊不滿，更稱無法修復關係了，結果昨天就傳出籃網和其他3隊完成共識，今天宣布加盟。儘管少了主將，火箭比賽照樣要打，今天面對馬刺卯足全力，本季大爆發的ChristianWood攻下27分15籃板，頂替Harden首度先發的後衛SterlingBrown役住次高的23分，力退6人得分上雙的馬刺。「這是場特別的勝利。」Silas賽後表示，「對於球隊重建相當重要，對球員們意義重大，今天我們展現了鬥志，這一直是我們堅信理念，看到球員拿出這樣的表現實在太棒了。"""
+    parseResultDICT = articut.parse(inputSTR)
+    inputLIST = []
+    count_baseball = 0
+    count_badminton = 0
+    for p in parseResultDICT["result_pos"]:
+        if len(p) == 1:
+            pass
+        else:
+            inputLIST.append(re.sub(pat, "", p))
+    for i in range(0, math.ceil(len(inputLIST)/20)):
+        resultDICT = runLoki(inputLIST[i*20:(i+1)*20])
+        try: 
+            count_baseball += resultDICT["baseball"]
+        except:
+            pass
+        try: 
+            count_badminton += resultDICT["badminton"]
+        except:
+            pass
+    resultDICT["baseball"] = count_baseball  
+    resultDICT["badminton"] = count_badminton
+    print("Result => {}".format(resultDICT)) 
 
-    #change money name from Chinese to English, and amount to numbers
-    Source= "USD"+moneyName(source_1)
-    Target = "USD"+moneyName(target_1)
-    Amount = amountSTRConvert(amount_1 )[amount_1]
-    
-    
-    #search in dictionary
-    Source_rate = rateDICT[Source]["Exrate"]
-    Target_rate = rateDICT[Target]["Exrate"]
-    #Exchange!
-    Result = Amount*(Target_rate/Source_rate)
-    
-    print("您好~~\n{0}{1}可換得%2.2f{2}\n歡迎再次使用!" .format(Amount,source_1,target_1)%(Result))
-
-#use request to download the data from: https://tw.rter.info/capi.php
+#[int(e) for e in list(myDICT.values())]
